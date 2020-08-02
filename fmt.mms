@@ -1,6 +1,6 @@
 % Program to format MMIXAL source files.
         LOC     Data_Segment
-* Buffers supporting lines of length 127 (128 - null character)
+* Buffers supporting lines of length 127 (128 - null character).
         GREG    @
 InBufL  IS      128
 InBufP  GREG    @                       Pointer to InBuf
@@ -41,7 +41,7 @@ result  IS      $10                     Result from a subroutine call
 arg1    IS      $11                     First argument to subroutine call
 
 :Print  GET     return,:rJ
-        SET     c,'a'                   (Any non-space character)
+        SET     c,'a'                   (Any "word" character)
         SET     i,0                     Initialization
         SET     j,0
         SET     f,0
@@ -49,20 +49,29 @@ arg1    IS      $11                     First argument to subroutine call
         LDBU    fj,t,0
         LDBU    fjj,t,1
 
+        * Get next character from InBuf.
 1H      ADDU    prev,c,0                prev = c
         LDBU    c,:InBufP,i             c = InBuf[i++]
         INCL    i,1
 
-        CMP     t,c,' '                 if anything < ' ' is newline, 0, etc.
-        BN      t,8F                    go 8F
+        * If c < ' ' (i.e., newline or 0), go to end, otherwise continue.
+        CMP     t,c,' '
+        BN      t,8F
 
-        CMP     t,f,3                   if f < 3 , go 2F
+        * We have three fields we want to format (label, op, and operands),
+        * and the rest of the line can be a remark. If we can determine that
+        * we've already filled up the three fields (f >= 3), we can merely
+        * copy the remainder of InBuf into OutBuf by looping back to 1H.
+        CMP     t,f,3                   if f < 3, go 2F to fill fields
         PBN     t,2F                    else,
-        STBU    c,:OutBufP,j            OutBuf[j++] = c
+        STBU    c,:OutBufP,j            Copy c to OutBuf and loop
         INCL    j,1
         JMP     1B
 
-        * Don't format line if it contains %, *, ;, ", or ' in first fields.
+        * If %, *, ;, ", or ' are found in first three fields,
+        * go to end and print unformatted InBuf.
+        * (This handles comments and is also a cheap way to handle quotes 
+        * without more complicated logic.)
 2H      CMP     t,c,'%'
         BZ      t,9F
         CMP     t,c,'*'
@@ -71,40 +80,57 @@ arg1    IS      $11                     First argument to subroutine call
         BZ      t,9F
         CMP     t,c,'"'                 TODO: Handle quotes better
         BZ      t,9F
-        CMP     t,c,'''
+        CMP     t,c,'''                 TODO: Handle case for ' ' (space)
         BZ      t,9F
 
+        * Else if prev is space or tab, go 3F.
         CMP     t,prev,' '              if prev is space, go 3F
         PBZ     t,3F
         CMP     t,prev,#9               (tab = #9)
-        PBZ     t,3F                    else,
+        PBZ     t,3F
 
-        CMP     t,c,' '                 if c is space, go 1B
+        * Else if c is space or tab, ignore c and loop back to 1B.
+        CMP     t,c,' '
         BZ      t,1B
         CMP     t,c,#9
-        BZ      t,1B                    else,
+        BZ      t,1B
 
-        STBU    c,:OutBufP,j            OutBuf[j++] = c, go 1B
+        * If writing opcode (second field), make uppercase.
+6H      CMP     t,f,1
+        PBNZ    t,7F
+        CMP     t,c,'a'
+        PBN     t,7F
+        CMP     t,c,'z'
+        BP      t,7F
+        SUBU    c,c,'a'
+        ADDU    c,c,'A'
+
+        * Else, copy c into OutBuf and loop back to 1B.
+7H      STBU    c,:OutBufP,j
         INCL    j,1
         JMP     1B
 
-3H      CMP     t,c,' '                 if c is space, go 1B
+        * We're in a sequence of spaces, so fast-forward through InBuf until
+        * we find next non-space.
+        * (The 1H loop conditions do this implicitly; this just checks if
+        * we've reached the end of the fast-forward.)
+3H      CMP     t,c,' '
         PBZ     t,1B
         CMP     t,c,#9
-        PBZ     t,1B                    else,
+        PBZ     t,1B
 
+        * Reaching the next non-space means we've reached the beginning of
+        * the next field, so increment accordingly.
         INCL    f,1
         LDA     t,Fields
         LDBU    fj,t,f
         LDBU    fjj,t,f+1
 
+        * Finalize previous field, then set first char of new field to c.
 4H      CMP     t,j,fj                  if j < f, go 5F
-        PBN     t,5F                    else,
+        BNN     t,6B
 
-        STBU    c,:OutBufP,j
-        INCL    j,1
-        JMP     1B
-
+        * Set the empty locations in the previous field to spaces.
 5H      SET     t,' '
         STBU    t,:OutBufP,j
         INCL    j,1
