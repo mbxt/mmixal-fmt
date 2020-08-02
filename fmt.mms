@@ -70,7 +70,7 @@ arg1    IS      $11                     First argument to subroutine call
 
         * If %, *, ;, ", or ' are found in first three fields,
         * go to end and print unformatted InBuf.
-        * (This handles comments and is also a cheap way to handle quotes 
+        * (This handles comments and is also a cheap way to handle quotes
         * without more complicated logic.)
 2H      CMP     t,c,'%'
         BZ      t,9F
