@@ -10,7 +10,7 @@ The idea is to turn a lazily written code like
 
 ```asm
  loc #100
-1H SET $1,0 Set the counter to 0.
+1H SET $1,7 Set temp to 7.
  addu x,x,$1
 ```
 
@@ -18,15 +18,15 @@ into
 
 ```asm
             LOC     #100
-1H          SET     $1,0                Set the counter to 0.
+1H          SET     $1,7                Set temp to 7.
             ADDU    x,x,$1
 ```
 
-The instruction's fields are as follows:
+An instruction's fields are as follows:
 
 ```asm
 % Label     Opcode  Operands            Remark
-1H          SET     $1,0                Set the counter to 0.
+1H          SET     $1,7                Set temp to 7.
 ```
 
 The number of columns preceding the label, opcode, operands, and remark fields are, respectively: 0,12,20,40. This gives an appearance similar to most example code in "The Art of Computer Programming," but fields are aligned to multiples of four to make life easier for folks who use four space tab indents. This can of course be adjusted by changing the `Fields` in "fmt.mms" and reassembling the program. (Note: having a field width of 12 for the first field allows for longer, less restrictive label names, such as `:StackRoom`.)
