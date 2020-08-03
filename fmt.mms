@@ -58,7 +58,7 @@ arg1        IS      $11                 First argument to subroutine call
             INCL    i,1
 
             * If c < ' ' (i.e., newline or 0), go to end, otherwise continue.
-            CMP     t,c,' '
+            CMP     t,c,#20
             BN      t,8F
 
             * We have three fields we want to format (label, op, and operands),
@@ -71,7 +71,7 @@ arg1        IS      $11                 First argument to subroutine call
             INCL    j,1
             JMP     1B
 
-            * If %, *, ;, ", or ' are found in first three fields,
+            * If %, *, ;, or " are found in first three fields,
             * go to end and print unformatted InBuf.
             * (This handles comments and is also a cheap way to handle quotes
             * without more complicated logic.)
@@ -81,19 +81,17 @@ arg1        IS      $11                 First argument to subroutine call
             BZ      t,9F
             CMP     t,c,';'
             BZ      t,9F
-            CMP     t,c,'"'             TODO: Handle quotes better
-            BZ      t,9F
-            CMP     t,c,'''             TODO: Handle case for ' ' (space)
+            CMP     t,c,'"'             TODO: Handle quotes differently
             BZ      t,9F
 
             * Else if prev is space or tab, go 3F.
-            CMP     t,prev,' '          if prev is space, go 3F
+            CMP     t,prev,#20          if prev is space, go 3F
             PBZ     t,3F
             CMP     t,prev,#9           (tab = #9)
             PBZ     t,3F
 
             * Else if c is space or tab, ignore c and loop back to 1B.
-            CMP     t,c,' '
+            CMP     t,c,#20
             BZ      t,1B
             CMP     t,c,#9
             BZ      t,1B
@@ -117,7 +115,7 @@ arg1        IS      $11                 First argument to subroutine call
             * until we find next non-space.
             * (The 1H loop conditions do this implicitly; this just checks
             * if we've reached the end of the fast-forward.)
-3H          CMP     t,c,' '
+3H          CMP     t,c,#20
             PBZ     t,1B
             CMP     t,c,#9
             PBZ     t,1B
@@ -134,7 +132,7 @@ arg1        IS      $11                 First argument to subroutine call
             BNN     t,6B
 
             * Set the empty locations in the previous field to spaces.
-5H          SET     t,' '
+5H          SET     t,#20
             STBU    t,:OutBufP,j
             INCL    j,1
             JMP     4B
@@ -191,7 +189,7 @@ t           IS      $3                  Temp
 
             SUB     i,i,1               i-- (go back one character)
             LDBU    c,str,i             c = str[i]
-            CMP     t,c,' '             if c <= ' ' (i.e., whitespace), loop
+            CMP     t,c,#20             if c <= ' ' (i.e., whitespace), loop
             PBNP    t,2B
             INCL    i,1                 i++, set to next whitespace
 
