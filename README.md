@@ -51,7 +51,7 @@ Unfortunately, we can't directly use that output to replace the input file (e.g.
 
 The MMIX is a hypothetical machine designed by Donald Knuth for his book series, "The Art of Computer Programming," published by Addison-Wesley. It is an idealized RISC-based architecture meant to be fun to work with while demonstrating how algorithms (the subject of the book series) work at the machine level. MMIXAL is the assembly language for the MMIX machine.
 
-An assembly file (.mms) gets converted into an object file (.mmo) by the assembler (the "mmixal" program). The resulting object file can be run on the simulator (the "mmix" program), which gets wired up to standard input and output.
+A source file (.mms) written in MMIXAL gets converted into an object file (.mmo) by the assembler (the "mmixal" program). The resulting object file can be run on the simulator (the "mmix" program), which gets wired up to standard input and output.
 
 More information on MMIX can be found on the [MMIX website](http://mmix.cs.hm.edu/).
 
@@ -70,7 +70,7 @@ Unfortunately, using a single-quoted literal space character in the operand fiel
 
 This has to do with a simplification in how the formatter distinguishes fields (i.e., by *any* whitespace). Thus, it is advisable to use a `#20` in place of the literal space character.
 
-It is, however, permissible to use a `' '` space literal (with the single quotes) in the remarks field, as no further field alignment occurs after the remark field.
+It is, however, permissible to use a `' '` space literal (with the single quotes) in the remark field, as no further field alignment occurs after the beginning of the remark field.
 
 ### String literals
 
